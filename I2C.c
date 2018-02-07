@@ -40,6 +40,7 @@
 #include "fsl_port.h"
 #include "MK64F12.h"
 #include "fsl_i2c.h"
+#include "I2C.h"
 /* TODO: insert other include files here. */
 
 /* TODO: insert other definitions and declarations here. */
@@ -51,6 +52,12 @@
 
 //REVISAR EL DOCUMENTO 700CQ o algo asi. EN el IMU pagina 16
 
+    i2c_master_transfer_t masterXfer;
+
+
+    i2c_master_handle_t g_m_handle;
+    uint8_t buffer[6];
+    uint16_t accelerometer[3];
 
 volatile bool g_MasterCompletionFlag = false;
 
@@ -63,7 +70,8 @@ userData)
 		}
 }
 
-int main(void) {
+void I2Cinit ()
+{
 
   	/* Init board hardware. */
     BOARD_InitBootPins();
@@ -93,11 +101,9 @@ int main(void) {
 
     I2C_MasterInit(I2C0, &masterConfig, CLOCK_GetFreq(kCLOCK_BusClk));   //inicias el maestro
 
-    i2c_master_handle_t g_m_handle;
     I2C_MasterTransferCreateHandle(I2C0, &g_m_handle, i2c_master_callback, NULL);  //el segundo parametro es un callback que es llamar a una funcion cuando se tiene interrupcion. Apuntdor a funcion
 
     uint8_t data_buffer = 0x0D;
-    i2c_master_transfer_t masterXfer;
 
     masterXfer.slaveAddress = 0x1D;
     masterXfer.direction = kI2C_Write;
@@ -126,27 +132,24 @@ int main(void) {
     while (!g_MasterCompletionFlag){ }
     g_MasterCompletionFlag = false;
 
-
-    uint8_t buffer[6];
-    uint16_t accelerometer[3];
     /* Enter an infinite loop, just incrementing a counter. */
-    while(1) {
-    	 //para leer el sensor
-
-    	    masterXfer.slaveAddress = 0x1D;
-    	    masterXfer.direction = kI2C_Read;
-    	    masterXfer.subaddress = 0x01;  //direccion donde queremos escribir
-    	    masterXfer.subaddressSize = 1;  //1byte
-    	    masterXfer.data = buffer; //6 valores que queremos leer
-    	    masterXfer.dataSize = 6;
-    	    masterXfer.flags = kI2C_TransferDefaultFlag;
-
-    	    I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &masterXfer);
-    	    while (!g_MasterCompletionFlag){ }
-    	    g_MasterCompletionFlag = false;
-    	    accelerometer[0] = buffer[0]<<8 | buffer[1]; //recorremos primero hasta el fondo por el signo
-    	    accelerometer[1] = buffer[2]<<8 | buffer[3];
-    	    accelerometer[2] = buffer[4]<<8 | buffer[5];
-    }
-    return 0 ;
 }
+
+void getI2C()
+{
+   	 //para leer el sensor
+   	    masterXfer.slaveAddress = 0x1D;
+   	    masterXfer.direction = kI2C_Read;
+   	    masterXfer.subaddress = 0x01;  //direccion donde queremos escribir
+   	    masterXfer.subaddressSize = 1;  //1byte
+   	    masterXfer.data = buffer; //6 valores que queremos leer
+   	    masterXfer.dataSize = 6;
+   	    masterXfer.flags = kI2C_TransferDefaultFlag;
+
+   	    I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &masterXfer);
+   	    while (!g_MasterCompletionFlag){ }
+   	    g_MasterCompletionFlag = false;
+   	    accelerometer[0] = buffer[0]<<8 | buffer[1]; //recorremos primero hasta el fondo por el signo
+   	    accelerometer[1] = buffer[2]<<8 | buffer[3];
+   	    accelerometer[2] = buffer[4]<<8 | buffer[5];
+   }

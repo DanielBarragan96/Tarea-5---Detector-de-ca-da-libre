@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 /**
  * @file    PrenderLED.c
  * @brief   Application entry point.
@@ -40,6 +40,7 @@
 #include "fsl_debug_console.h"
 #include "fsl_port.h"
 #include "fsl_gpio.h"
+#include  "LEDs.h"
 /* TODO: insert other include files here. */
 
 /* TODO: insert other definitions and declarations here. */
@@ -73,34 +74,34 @@
 	   	GPIO_PinInit(GPIOB, 22, &led_config_gpio);
 	   	GPIO_PinInit(GPIOE, 26, &led_config_gpio);
 
-	   	void verde()
-	   		{
-	   		GPIO_WritePinOutput(GPIOE, 26, 0);
-	   		GPIO_WritePinOutput(GPIOB, 22, 1);
-	   		GPIO_WritePinOutput(GPIOB, 21, 1);
-	   		}
+	void verde()
+		{
+		GPIO_WritePinOutput(GPIOE, 26, 0);
+		GPIO_WritePinOutput(GPIOB, 22, 1);
+		GPIO_WritePinOutput(GPIOB, 21, 1);
+		}
 
-	   		/*!
-	   			 	 \brief	 This is the function for red LED color
-	   			 	 \param[in]  void.
-	   			 	 \return void
-	   			 */
-	   	void rojo()
-	   		{
-	   		GPIO_WritePinOutput(GPIOE, 26, 1);
-	   		GPIO_WritePinOutput(GPIOB, 22, 0);
-	   		GPIO_WritePinOutput(GPIOB, 21, 1);
-	   		}
+		/*!
+				 \brief	 This is the function for red LED color
+				 \param[in]  void.
+				 \return void
+			 */
+	void rojo()
+		{
+		GPIO_WritePinOutput(GPIOE, 26, 1);
+		GPIO_WritePinOutput(GPIOB, 22, 0);
+		GPIO_WritePinOutput(GPIOB, 21, 1);
+		}
 
-	   		/*!
-	   			 	 \brief	 This is the function for blue LED color
-	   			 	 \param[in]  void.
-	   			 	 \return void
-	   			 */
-	   	void azul()
-	   		{
-	   		GPIO_WritePinOutput(GPIOE, 26, 1);
-	   		GPIO_WritePinOutput(GPIOB, 22, 1);
-	   		GPIO_WritePinOutput(GPIOB, 21, 0);
-	   		}
+		/*!
+				 \brief	 This is the function for blue LED color
+				 \param[in]  void.
+				 \return void
+			 */
+	void azul()
+		{
+		GPIO_WritePinOutput(GPIOE, 26, 1);
+		GPIO_WritePinOutput(GPIOB, 22, 1);
+		GPIO_WritePinOutput(GPIOB, 21, 0);
+		}
 }
