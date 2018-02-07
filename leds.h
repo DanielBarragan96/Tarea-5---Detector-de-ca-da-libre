@@ -9,37 +9,61 @@
 #include "stdbool.h"
 #include "fsl_pit.h"
 
+#define STATE_MACHINE_SIZE 3 // size of the state machine
 
-//the system clock of the Kinetis
-#define SYSTEM_CLOCK CLOCK_GetBusClkFreq()
-//period for the pit to get 1 second
-#define PERIOD 2.00
-//pit number to count
-#define LDVAL_trigger  (SYSTEM_CLOCK * PERIOD)
-//for interruptions
-#define PORTC_IRQ_MASK 6
-#define PORTA_IRQ_MASK 4
-//PINS constants
-#define BLUE_LED_PIN 21
-#define RED_LED_PIN 22
-#define GREEN_LED_PIN 26
-#define SW2_PIN 6
-#define SW3_PIN 4
-
-/* This definition is used to indicate if the led is on or off */
+/* This definition is used to manage the colors in sequence */
 typedef enum
 {
-	LED_ON = 0,
-	LED_OFF = 1
-}Led;
-
+	RED = 0,
+	GREEN,
+	BLUE
+}Color;
 /* This definition is used to indicate whether the LEDs are changing or not */
 typedef enum
 {
 	RUN = true,
 	STOP = false
 }Status;
+/* This definition is used to indicate if the led is on or off */
+typedef enum
+{
+	LED_ON = 0,
+	LED_OFF = 1
+}Led;
+/* This structure indicates which is the next and before
+ * value of a color in the sequence */
+typedef struct
+{
+	Color next;
+	Color before;
+	BooleanType g_reverse;
+	Status g_leds_status;
+}Leds_sequence;
 
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+/*!
+ 	 \brief	 This function changes the reverse variable.
+ 	 \return TRUE if there was no problem
+ */
+BooleanType toogleReverse();
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+/*!
+ 	 \brief	 This function changes the LEDs to the next color.
+ 	 \return TRUE if there was no problem
+ */
+BooleanType updateLeds();
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+/*!
+ 	 \brief	 Update the LED color according to the g_current_color variable.
+ 	 \return TRUE if there was no problem
+ */
+BooleanType changeColor();
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -48,8 +72,6 @@ typedef enum
  	 \return TRUE if there was no problem
  */
 BooleanType ToogleLedStatus();
-
-BooleanType changeLED();
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
