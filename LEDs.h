@@ -8,9 +8,10 @@
 #ifndef LEDS_H_
 #define LEDS_H_
 
-void initLED();
+void ledsinit();
 void verde();
 void azul();
 void rojo();
+void apagado();
 
 #endif /* LEDS_H_ */
