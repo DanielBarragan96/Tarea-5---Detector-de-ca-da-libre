@@ -169,7 +169,7 @@ void i2cinit()
 
 uint16_t getA()
 {
-	masterXfer.slaveAddress = 0x1D;
+			masterXfer.slaveAddress = 0x1D;
 			masterXfer.direction = kI2C_Read;
 			masterXfer.subaddress = 0x01;
 			masterXfer.subaddressSize = 1;
@@ -178,6 +178,8 @@ uint16_t getA()
 			masterXfer.flags = kI2C_TransferDefaultFlag;
 
 			I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &masterXfer);
+
+			i2c_ReleaseBus();
 			while (!g_MasterCompletionFlag){}
 			g_MasterCompletionFlag = false;
 
