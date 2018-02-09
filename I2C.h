@@ -19,20 +19,19 @@
 /***************************************************************************/
 /***************************************************************************/
 /*!
- 	 \brief	 Start the necessary peripherals to use the I2C and read the
- 	 accelerometer.
- 	 \return TRUE if there was no problem
+ \brief	 Start the necessary peripherals to use the I2C and read the
+ accelerometer.
+ \return TRUE if there was no problem
  */
-int init_i2c();
+int init_i2c ();
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
 /*!
- 	 \brief	 This function reads the status of the accelerometer, and also
- 	 manages the status of the LED sequence
- 	 \return TRUE if there was no problem
+ \brief	 This function reads the status of the accelerometer, and also
+ manages the status of the LED sequence
+ \return TRUE if there was no problem
  */
-int i2c_trnsfer();
-
+int i2c_trnsfer ();
 
 #endif /* I2C_H_ */

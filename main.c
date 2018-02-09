@@ -10,19 +10,19 @@
 #include "init.h"
 #include "I2C.h"
 
-void PIT0_IRQHandler(void)
-{//handle the pit interrupt, change led color
-	changeLED();
+void PIT0_IRQHandler (void)
+{ //handle the pit interrupt, change led color
+    changeLED ();
 }
 
-int main(void)
+int main (void)
 {
-	init_i2c();//initialize I2C
-	initSystem();//initialize peripherals like PIT and LEDs
+    init_i2c (); //initialize I2C
+    initSystem (); //initialize peripherals like PIT and LEDs
 
-	while(1)
-	{
-		i2c_trnsfer();//manage accelerometer
-	}
+    while (1)
+    {
+        i2c_trnsfer (); //manage accelerometer
+    }
 
 }

@@ -12,12 +12,15 @@
 #define PORTC_IRQ_MASK 6
 #define PORTA_IRQ_MASK 4
 //PINS constants
-#define BLUE_LED_PIN 21
 #define RED_LED_PIN 22
-#define GREEN_LED_PIN 26
-#define SW2_PIN 6
-#define SW3_PIN 4
 
-int initSystem();
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+/*!
+ \brief  This function initialices all the peripherals, includig the LEDs and interruptions.
+ \return TRUE if there was no problem
+ */
+int initSystem ();
 
 #endif /* INIT_H_ */
