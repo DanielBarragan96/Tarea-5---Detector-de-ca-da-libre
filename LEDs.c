@@ -4,96 +4,78 @@
 #include "MK64F12.h"
 #include "fsl_pit.h"
 
-//Global variables with initial values
-//indicates when sequence is reversed
-static volatile BooleanType g_reverse = FALSE;
 //indicates if sequence is stopped
-static volatile Status g_leds_status = RUN;
-//indicates the current color
-static volatile Color g_current_color = RED;
+static volatile Led g_leds_status = LED_OFF;
+//indicates if sequence is stopped
+static volatile Status g_leds_sequence = STOP;
+//flag used to stop the sequence after the PiIT finish counting
+static volatile int g_stop_sequence = 0;
 
-//Finite state machine to store the colors sequence
-const Leds_sequence g_fsm_moore[] =
+BooleanType startLed()
 {
-		{GREEN, BLUE},//for first color (red)
-		{BLUE, RED},//for second color (green)
-		{RED, GREEN}//for third color (blue)
-};
-
-BooleanType toogleReverse()
-{//toggle the value of g_reverse
-	g_reverse = ((g_reverse) ? 0 : 1);
+	g_stop_sequence = 0;//reset start flag
+	if(!g_leds_sequence)
+	{//if sequence not started start it
+		ledOn();//turn LED on
+		g_leds_sequence = RUN;//change the sequence status
+		g_leds_status = LED_ON;//change the LED variable status
+		startPit();//start counting
+	}
 	return TRUE;
 }
 
-BooleanType updateLeds()
+BooleanType stopLed()
 {
-	if (g_reverse)
-	{//change the color to the value before
-		g_current_color = g_fsm_moore[g_current_color].before;
-	}
-	else
-	{//change the color to the value after
-		g_current_color = g_fsm_moore[g_current_color].next;
-	}
-	changeColor();//update color
-	return TRUE;//there was no mistake
+	g_stop_sequence = 1;//turn on stop flag
+	return TRUE;
 }
 
-BooleanType changeColor()
+BooleanType ledOff()
 {
-	turnLedsOff();
-	switch (g_current_color)
-		{
-		case GREEN:
-			{//turn green led on
-				GPIO_PinWrite(GPIOB, 21, LED_ON);
-				break;
-			}
-		case RED:
-			{//turn red led on
-				GPIO_PinWrite(GPIOB, 22, LED_ON);
-				break;
-			}
-		case BLUE:
-			{//turn blue led on
-				GPIO_PinWrite(GPIOE, 26, LED_ON);
-				break;
-			}
-			default:
-			{//reset led color to default and re-call itself
-				g_current_color = RED;
-				ToogleLedStatus();
-			}
-		}
-	return TRUE;//there was no mistake
+	g_leds_status = LED_OFF;//change leds status
+	GPIO_PinWrite(GPIOB, 22, LED_OFF);//change the LED variable status
+	return TRUE;//there was no error}
+
+BooleanType ledOn()
+{
+	g_leds_status = LED_ON;//change leds status
+	GPIO_PinWrite(GPIOB, RED_LED_PIN, LED_ON);//tuern led on
+	return TRUE;
 }
 
-BooleanType ToogleLedStatus()
+BooleanType startPit()
 {
-	if(g_leds_status)
-	{
-		g_leds_status = STOP;//change leds status
-		PIT_StopTimer(PIT, kPIT_Chnl_0);//stop the pit
-	}
-	else
-	{
-		g_leds_status = RUN;//change leds status
-		PIT_StartTimer(PIT, kPIT_Chnl_0);//start the pit
-	}
+	g_leds_sequence = RUN;//change sequence to running
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0, LDVAL_trigger);//assign cycles
+	PIT_ClearStatusFlags(PIT, kPIT_Chnl_0, PIT_TFLG_TIF_MASK);//clear flag
+	PIT_StartTimer(PIT, kPIT_Chnl_0);//start counting
+	return TRUE;
+}
 
+BooleanType stopPit()
+{
+	g_leds_status = LED_OFF;//change the LED variable status
+	g_leds_sequence = STOP;//change LED status
+	ledOff();//turn LED off
+	PIT_StopTimer(PIT, kPIT_Chnl_0);//g_stop_sequence the pit
 	return TRUE;//there was no error
 }
 
-Status getLedStatus()
+BooleanType changeLED()
 {
-	return g_leds_status;//there was no error
-}
+	PIT_ClearStatusFlags(PIT, kPIT_Chnl_0, PIT_TFLG_TIF_MASK);//clear flag
+	if(g_stop_sequence)
+	{//if sequence has to stop
+		g_stop_sequence = STOP;//stop sequence
+		stopPit();//stop couting
+		return FALSE;//
+	}
+	//Function to toggle the status of the LED
+		if(!g_leds_status)
+			ledOff();
+		else
+			ledOn();
 
-BooleanType turnLedsOff()
-{//turn all the Kinetis leds off
-	GPIO_PinWrite(GPIOB, 21, LED_OFF);
-	GPIO_PinWrite(GPIOB, 22, LED_OFF);
-	GPIO_PinWrite(GPIOE, 26, LED_OFF);
+	startPit();//start counting
 	return TRUE;//there was no mistake
 }

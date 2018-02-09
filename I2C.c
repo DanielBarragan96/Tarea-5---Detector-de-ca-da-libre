@@ -44,10 +44,15 @@
 #include "I2C.h"
 #include "leds.h"
 
+//Flag to check the I2C status
 volatile bool g_MasterCompletionFlag = false;
+//Master transfer used to write
 i2c_master_transfer_t g_masterXfer_w;
+//Master transfer used to read
 i2c_master_transfer_t g_masterXfer_r;
+//Master transfer that can be modified
 i2c_master_transfer_t masterXfer;
+//I2C variables
 uint8_t data_buffer = 0x01;
 uint8_t read_data;
 i2c_master_handle_t g_m_handle;
@@ -200,11 +205,14 @@ int i2c_trnsfer()
 		accelerometer[1] = buffer[2] << 8 | buffer[3];
 		accelerometer[2] = buffer[4] << 8 | buffer[5];
 
+	//Calculate the value of the accelerometer in the Z axis
 	float y_axis = (float) (GRAVITY - accelerometer[2]*ACCELEROMETER_Y);
+	//Make an absoulte to obtain only positive numbers
 	y_axis = (y_axis<0? y_axis*-1 : y_axis);
+	//if the value readed in the accelerometer if bigger than the treshold
 	if(ACCELEROMETER_TRESHOLD < y_axis)
-		startLed();
+		startLed();//start sequence
 	else
-		stopLed();
+		stopLed();//turn on flag to stop the sequence
 	return 0;
 }

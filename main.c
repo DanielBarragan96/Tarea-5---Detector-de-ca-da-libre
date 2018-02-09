@@ -12,19 +12,17 @@
 
 void PIT0_IRQHandler(void)
 {//handle the pit interrupt, change led color
-	BooleanType keepOn = changeLED();
-	if(keepOn)
-		startPit();
+	changeLED();
 }
 
 int main(void)
 {
-	init_i2c();
-	initSystem();
+	init_i2c();//initialize I2C
+	initSystem();//initialize peripherals like PIT and LEDs
 
 	while(1)
 	{
-		i2c_trnsfer();
+		i2c_trnsfer();//manage accelerometer
 	}
 
 }

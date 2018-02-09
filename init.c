@@ -68,7 +68,6 @@ int initSystem()
     EnableIRQ(PIT0_IRQn);
     PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable);
     PIT_ClearStatusFlags(PIT, kPIT_Chnl_0, PIT_TFLG_TIF_MASK);
-    //PIT_StartTimer(PIT, kPIT_Chnl_0);
 
     //turn red led on
     GPIO_PinWrite(GPIOB, RED_LED_PIN, LED_OFF);
