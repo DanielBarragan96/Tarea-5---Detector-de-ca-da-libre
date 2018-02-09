@@ -8,6 +8,9 @@
 #ifndef I2C_H_
 #define I2C_H_
 
+#define GRAVITY 9.81
+#define ACCELEROMETER_Y (0.00244/4)
+#define ACCELEROMETER_TRESHOLD 10
 
 int init_i2c();
 

@@ -27,9 +27,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- 
+
 /**
- * @file    Acelerometro.c
+ * @file    imu_read.c
  * @brief   Application entry point.
  */
 #include <stdio.h>
@@ -37,46 +37,101 @@
 #include "peripherals.h"
 #include "pin_mux.h"
 #include "clock_config.h"
-#include "fsl_port.h"
 #include "MK64F12.h"
+#include "fsl_debug_console.h"
+#include "fsl_port.h"
 #include "fsl_i2c.h"
-/* TODO: insert other include files here. */
-
-/* TODO: insert other definitions and declarations here. */
-
-/*
- * @brief   Application entry point.
- */
-
-
-//REVISAR EL DOCUMENTO 700CQ o algo asi. EN el IMU pagina 16
-
+#include "I2C.h"
+#include "leds.h"
 
 volatile bool g_MasterCompletionFlag = false;
 i2c_master_transfer_t g_masterXfer_w;
 i2c_master_transfer_t g_masterXfer_r;
 i2c_master_transfer_t masterXfer;
-uint8_t data_buffer = 0x0D;
+uint8_t data_buffer = 0x01;
 uint8_t read_data;
 i2c_master_handle_t g_m_handle;
 
-static void i2c_master_callback(I2C_Type *base, i2c_master_handle_t *handle, status_t status, void *
-userData)
+static void i2c_release_bus_delay(void)
 {
-	if (status == kStatus_Success)
-		{
-			g_MasterCompletionFlag = true;
-		}
+    uint32_t i = 0;
+    for (i = 0; i < 100; i++)
+    {
+        __NOP();
+    }
 }
 
-int init_i2c() {
+void i2c_ReleaseBus()
+{
+	uint8_t i = 0;
+	gpio_pin_config_t pin_config;
+	port_pin_config_t i2c_pin_config =
+	{ 0 };
 
+	/* Config pin mux as gpio */
+	i2c_pin_config.pullSelect = kPORT_PullUp;
+	i2c_pin_config.mux = kPORT_MuxAsGpio;
+
+	pin_config.pinDirection = kGPIO_DigitalOutput;
+	pin_config.outputLogic = 1U;
+	CLOCK_EnableClock(kCLOCK_PortE);
+	PORT_SetPinConfig(PORTE, 24, &i2c_pin_config);
+	PORT_SetPinConfig(PORTE, 25, &i2c_pin_config);
+
+	GPIO_PinInit(GPIOE, 24, &pin_config);
+	GPIO_PinInit(GPIOE, 25, &pin_config);
+
+	GPIO_PinWrite(GPIOE, 25, 0U);
+	i2c_release_bus_delay();
+
+	for (i = 0; i < 9; i++)
+	{
+		GPIO_PinWrite(GPIOE, 24, 0U);
+		i2c_release_bus_delay();
+
+		GPIO_PinWrite(GPIOE, 25, 1U);
+		i2c_release_bus_delay();
+
+		GPIO_PinWrite(GPIOE, 24, 1U);
+		i2c_release_bus_delay();
+		i2c_release_bus_delay();
+	}
+
+	GPIO_PinWrite(GPIOE, 24, 0U);
+	i2c_release_bus_delay();
+
+	GPIO_PinWrite(GPIOE, 25, 0U);
+	i2c_release_bus_delay();
+
+	GPIO_PinWrite(GPIOE, 24, 1U);
+	i2c_release_bus_delay();
+
+	GPIO_PinWrite(GPIOE, 25, 1U);
+	i2c_release_bus_delay();
+}
+
+static void i2c_master_callback(I2C_Type *base, i2c_master_handle_t *handle,
+        status_t status, void * userData)
+{
+
+	if (status == kStatus_Success)
+	{
+		g_MasterCompletionFlag = true;
+	}
+}
+
+/*
+ * @brief   Application entry point.
+ */
+int init_i2c()
+{
 
 	/* Init board hardware. */
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
 	BOARD_InitBootPeripherals();
 	/* Init FSL debug console. */
+	i2c_ReleaseBus();
 	BOARD_InitDebugConsole();
 
 	CLOCK_EnableClock(kCLOCK_PortE);
@@ -95,11 +150,9 @@ int init_i2c() {
 	masterConfig.baudRate_Bps = 100000;
 	I2C_MasterInit(I2C0, &masterConfig, CLOCK_GetFreq(kCLOCK_BusClk));
 
-	i2c_master_handle_t g_m_handle;
-	I2C_MasterTransferCreateHandle(I2C0, &g_m_handle,
-	        i2c_master_callback, NULL);
+	I2C_MasterTransferCreateHandle(I2C0, &g_m_handle, i2c_master_callback,
+	NULL);
 
-	uint8_t data_buffer = 0x01;
 
 	masterXfer.slaveAddress = 0x1D;
 	masterXfer.direction = kI2C_Write;
@@ -109,43 +162,49 @@ int init_i2c() {
 	masterXfer.dataSize = 1;
 	masterXfer.flags = kI2C_TransferDefaultFlag;
 
-	I2C_MasterTransferNonBlocking(I2C0,  &g_m_handle,
-	        &masterXfer);
-	while (!g_MasterCompletionFlag){}
+	I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &masterXfer);
+	while (!g_MasterCompletionFlag)
+	{
+	}
 	g_MasterCompletionFlag = false;
 
+	/* Force the counter to be placed into memory. */
+	volatile static int i = 0;
 	return 0;
 }
 
 int i2c_trnsfer()
 {
-    uint8_t buffer[6];
-    uint16_t accelerometer[3];
 
-//	I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &g_masterXfer_r);
-//	while (!g_MasterCompletionFlag){ }
-//	g_MasterCompletionFlag = false;
-//	accelerometer[0] = buffer[0]<<8 | buffer[1]; //recorremos primero hasta el fondo por el signo
-//	accelerometer[1] = buffer[2]<<8 | buffer[3];
-//	accelerometer[2] = buffer[4]<<8 | buffer[5];
-	i2c_master_transfer_t masterXfer;
+	/* Force the counter to be placed into memory. */
+	volatile static int i = 0;
+	uint8_t buffer[6];
+	int16_t accelerometer[3];
+	/* Enter an infinite loop, just incrementing a counter. */
 
-	masterXfer.slaveAddress = 0x1D;
-	masterXfer.direction = kI2C_Read;
-	masterXfer.subaddress = 0x01;
-	masterXfer.subaddressSize = 1;
-	masterXfer.data = buffer;
-	masterXfer.dataSize = 6;
-	masterXfer.flags = kI2C_TransferDefaultFlag;
+		masterXfer.slaveAddress = 0x1D;
+		masterXfer.direction = kI2C_Read;
+		masterXfer.subaddress = 0x01;
+		masterXfer.subaddressSize = 1;
+		masterXfer.data = buffer;
+		masterXfer.dataSize = 6;
+		masterXfer.flags = kI2C_TransferDefaultFlag;
 
-	I2C_MasterTransferNonBlocking(I2C0,  &g_m_handle,
-			&masterXfer);
-	while (!g_MasterCompletionFlag){}
-	g_MasterCompletionFlag = false;
+		I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &masterXfer);
+		while (!g_MasterCompletionFlag)
+		{
+		}
+		g_MasterCompletionFlag = false;
 
-	accelerometer[0] = buffer[0]<<8 | buffer[1];
-	accelerometer[1] = buffer[2]<<8 | buffer[3];
-	accelerometer[2] = buffer[4]<<8 | buffer[5];
+		accelerometer[0] = buffer[0] << 8 | buffer[1];
+		accelerometer[1] = buffer[2] << 8 | buffer[3];
+		accelerometer[2] = buffer[4] << 8 | buffer[5];
 
+	float y_axis = (float) (GRAVITY - accelerometer[2]*ACCELEROMETER_Y);
+	y_axis = (y_axis<0? y_axis*-1 : y_axis);
+	if(ACCELEROMETER_TRESHOLD < y_axis)
+		startLed();
+	else
+		stopLed();
 	return 0;
 }
